@@ -31,6 +31,8 @@ func main() {
 	r.Use(utils.Cors())
 
 	r.Get("/", app.CheckHealth)
+	r.Get("/users", app.GetUsers)
+	r.Delete("/user/{lastName}", app.DeleteUser)
 
 	log.Printf("Listening on port %d", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), r))
