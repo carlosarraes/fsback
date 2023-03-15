@@ -32,6 +32,7 @@ func main() {
 
 	r.Get("/", app.CheckHealth)
 	r.Get("/users", app.GetUsers)
+	r.Post("/user", app.CreateUser)
 	r.Delete("/user/{lastName}", app.DeleteUser)
 
 	log.Printf("Listening on port %d", port)
