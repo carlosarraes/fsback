@@ -61,6 +61,7 @@ VALUES
 ## Endpoints
 
 There are four endpoints available:
+
 Endpoint: `https://gofs-4wgfen3n5q-rj.a.run.app/`
 
 - `GET "/"` Check Health: Returns if the server is running.
