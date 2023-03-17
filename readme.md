@@ -61,8 +61,7 @@ VALUES
 ## Endpoints
 
 There are four endpoints available:
-
-endpoint: `https://gofs-4wgfen3n5q-rj.a.run.app/`
+Endpoint: `https://gofs-4wgfen3n5q-rj.a.run.app/`
 
 - `GET "/"` Check Health: Returns if the server is running.
 - `GET "/users"` Get Users: Returns JSON with all users.
