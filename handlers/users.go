@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/carlosarraes/fsback/utils"
@@ -17,7 +18,7 @@ type User struct {
 func (app *App) GetUsers(w http.ResponseWriter, r *http.Request) {
 	data, err := app.Db.Query("SELECT first_name, last_name, progress FROM data.user")
 	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, "Error getting users")
+		utils.WriteResponse(w, http.StatusInternalServerError, "Error getting users")
 		return
 	}
 	defer data.Close()
@@ -27,7 +28,7 @@ func (app *App) GetUsers(w http.ResponseWriter, r *http.Request) {
 		var user User
 		err := data.Scan(&user.FirstName, &user.LastName, &user.Progress)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, "Error getting users")
+			utils.WriteResponse(w, http.StatusInternalServerError, "Error getting users")
 			return
 		}
 		usersList = append(usersList, user)
@@ -35,7 +36,7 @@ func (app *App) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err = json.NewEncoder(w).Encode(usersList); err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, "Error getting users")
+		utils.WriteResponse(w, http.StatusInternalServerError, "Error getting users")
 		return
 	}
 }
@@ -45,34 +46,35 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	data, err := app.Db.Exec("DELETE FROM data.user WHERE last_name = $1", lastName)
 	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, "Error deleting user")
+		utils.WriteResponse(w, http.StatusInternalServerError, "Error deleting user")
 		return
 	}
 	status, _ := data.RowsAffected()
 	if status == 0 {
-		utils.WriteErrorResponse(w, http.StatusNotFound, "Error deleting user: User not found")
+		utils.WriteResponse(w, http.StatusNotFound, "Error deleting user: User not found")
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	user := fmt.Sprintf("User %s deleted", lastName)
+	utils.WriteResponse(w, http.StatusOK, user)
 }
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var user User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusBadRequest, "Error creating user: Invalid request body")
+		utils.WriteResponse(w, http.StatusBadRequest, "Error creating user: Invalid request body")
 		return
 	}
 
 	if user.FirstName == "" || user.LastName == "" || user.Progress == 0 {
-		utils.WriteErrorResponse(w, http.StatusBadRequest, "Error creating user: First name, last name and progress are required")
+		utils.WriteResponse(w, http.StatusBadRequest, "Error creating user: First name, last name and progress are required")
 		return
 	}
 
 	sumCheck, err := app.Db.Query("SELECT sum(progress) FROM data.user")
 	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, "Error getting users")
+		utils.WriteResponse(w, http.StatusInternalServerError, "Error getting users")
 		return
 	}
 	defer sumCheck.Close()
@@ -80,26 +82,26 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if sumCheck.Next() {
 		err := sumCheck.Scan(&sum)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, "Error scanning users")
+			utils.WriteResponse(w, http.StatusInternalServerError, "Error scanning users")
 			return
 		}
 	}
 
 	if (sum*100)+user.Progress > 100 {
-		utils.WriteErrorResponse(w, http.StatusBadRequest, "Error creating user: Progress sum is greater than 100")
+		utils.WriteResponse(w, http.StatusBadRequest, "Error creating user: Progress sum is greater than 100")
 		return
 	}
 
 	data, err := app.Db.Exec("INSERT INTO data.user (first_name, last_name, progress) VALUES ($1, $2, $3)", user.FirstName, user.LastName, user.Progress)
 	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, "Error creating user")
+		utils.WriteResponse(w, http.StatusInternalServerError, "Error creating user")
 		return
 	}
 	status, _ := data.RowsAffected()
 	if status == 0 {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, "Error creating user")
+		utils.WriteResponse(w, http.StatusInternalServerError, "Error creating user")
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	utils.WriteResponse(w, http.StatusCreated, "User created")
 }
