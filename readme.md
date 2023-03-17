@@ -43,7 +43,8 @@ CREATE TABLE data.user (
   progress NUMERIC NOT NULL
 );
 
-INSERT INTO data.user (first_name, last_name, progress)
+INSERT INTO data.user
+  (first_name, last_name, progress)
 VALUES
   ('Carlos', 'Moura', 0.05),
   ('Fernando', 'Oliveira', 0.15),
