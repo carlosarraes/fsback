@@ -5,33 +5,16 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/carlosarraes/fsback/db"
 	"github.com/carlosarraes/fsback/utils"
 	"github.com/go-chi/chi/v5"
 )
 
-type User struct {
-	FirstName string  `json:"firstName"`
-	LastName  string  `json:"lastName"`
-	Progress  float64 `json:"progress"`
-}
-
 func (app *App) GetUsers(w http.ResponseWriter, r *http.Request) {
-	data, err := app.Db.Query("SELECT first_name, last_name, progress FROM data.user")
+	usersList, err := app.DB.GetUsers()
 	if err != nil {
 		utils.WriteResponse(w, http.StatusInternalServerError, "Error getting users")
 		return
-	}
-	defer data.Close()
-
-	var usersList []User
-	for data.Next() {
-		var user User
-		err := data.Scan(&user.FirstName, &user.LastName, &user.Progress)
-		if err != nil {
-			utils.WriteResponse(w, http.StatusInternalServerError, "Error getting users")
-			return
-		}
-		usersList = append(usersList, user)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -44,14 +27,9 @@ func (app *App) GetUsers(w http.ResponseWriter, r *http.Request) {
 func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	lastName := chi.URLParam(r, "lastName")
 
-	data, err := app.Db.Exec("DELETE FROM data.user WHERE last_name = $1", lastName)
+	err := app.DB.DeleteUser(lastName)
 	if err != nil {
 		utils.WriteResponse(w, http.StatusInternalServerError, "Error deleting user")
-		return
-	}
-	status, _ := data.RowsAffected()
-	if status == 0 {
-		utils.WriteResponse(w, http.StatusNotFound, "Error deleting user: User not found")
 		return
 	}
 
@@ -60,7 +38,7 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var user User
+	var user db.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		utils.WriteResponse(w, http.StatusBadRequest, "Error creating user: Invalid request body")
@@ -72,33 +50,18 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sumCheck, err := app.Db.Query("SELECT sum(progress) FROM data.user")
-	if err != nil {
-		utils.WriteResponse(w, http.StatusInternalServerError, "Error getting users")
-		return
-	}
-	defer sumCheck.Close()
-	var sum float64
-	if sumCheck.Next() {
-		err := sumCheck.Scan(&sum)
-		if err != nil {
-			utils.WriteResponse(w, http.StatusInternalServerError, "Error scanning users")
-			return
-		}
-	}
-
-	if (sum*100)+user.Progress > 100 {
-		utils.WriteResponse(w, http.StatusBadRequest, "Error creating user: Progress sum is greater than 100")
-		return
-	}
-
-	data, err := app.Db.Exec("INSERT INTO data.user (first_name, last_name, progress) VALUES ($1, $2, $3)", user.FirstName, user.LastName, user.Progress)
+	sum, err := app.DB.SumCheck()
 	if err != nil {
 		utils.WriteResponse(w, http.StatusInternalServerError, "Error creating user")
 		return
 	}
-	status, _ := data.RowsAffected()
-	if status == 0 {
+
+	if sum+user.Progress > 1 {
+		utils.WriteResponse(w, http.StatusBadRequest, "Error creating user: Progress sum cannot exceed 100")
+		return
+	}
+
+	if err = app.DB.CreateUser(user); err != nil {
 		utils.WriteResponse(w, http.StatusInternalServerError, "Error creating user")
 		return
 	}
