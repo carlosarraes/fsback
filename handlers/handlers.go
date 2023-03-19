@@ -52,7 +52,7 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	sum, err := app.DB.SumCheck()
 	if err != nil {
-		utils.WriteResponse(w, http.StatusInternalServerError, "Error creating user")
+		utils.WriteResponse(w, http.StatusInternalServerError, "Error getting sum of progress")
 		return
 	}
 
