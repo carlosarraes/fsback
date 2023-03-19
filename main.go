@@ -7,9 +7,6 @@ import (
 
 	"github.com/carlosarraes/fsback/db"
 	"github.com/carlosarraes/fsback/handlers"
-	"github.com/carlosarraes/fsback/utils"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
@@ -21,18 +18,9 @@ func main() {
 	}
 	defer db.Close()
 
-	app := &handlers.App{Db: db}
+	app := handlers.App{Db: db}
 
-	r := chi.NewRouter()
-
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(utils.Cors())
-
-	r.Get("/", app.CheckHealth)
-	r.Get("/users", app.GetUsers)
-	r.Post("/user", app.CreateUser)
-	r.Delete("/user/{lastName}", app.DeleteUser)
+	r := app.Routes()
 
 	log.Printf("Listening on port %d", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), r))
