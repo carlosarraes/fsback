@@ -5,7 +5,7 @@ You can check the full stack application in this [link](https://fsstack.netlify.
 
 ## API and Database
 
-The API is hosted on Google Cloud Run and uses `golang:1.20.1-alpine3.17`. The database uses ElephantSQL server to persist data, with initial data being initialized once the database was created.
+The API is hosted on Google Cloud Run and uses `golang:1.20.1-alpine3.17`. The database uses ElephantSQL server to persist data, with initial data being initialized once the database was created(manually).
 
 <table align="center">
 <tr>
