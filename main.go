@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/carlosarraes/fsback/db"
 	"github.com/carlosarraes/fsback/handlers"
+	"github.com/carlosarraes/fsback/repository/dbrepo"
 	"github.com/joho/godotenv"
 )
 
@@ -29,7 +29,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	app.DB = db.PostgresConn{DB: conn}
+	app.DB = &dbrepo.PostgresDBRepo{DB: conn}
 
 	r := app.Routes()
 

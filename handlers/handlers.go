@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/carlosarraes/fsback/db"
+	"github.com/carlosarraes/fsback/repository/dbrepo"
 	"github.com/carlosarraes/fsback/utils"
 	"github.com/go-chi/chi/v5"
 )
@@ -29,7 +29,7 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	err := app.DB.DeleteUser(lastName)
 	if err != nil {
-		utils.WriteResponse(w, http.StatusInternalServerError, "Error deleting user")
+		utils.WriteResponse(w, http.StatusNotFound, "User not found")
 		return
 	}
 
@@ -38,7 +38,7 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var user db.User
+	var user *dbrepo.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		utils.WriteResponse(w, http.StatusBadRequest, "Error creating user: Invalid request body")
@@ -50,18 +50,12 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sum, err := app.DB.SumCheck()
-	if err != nil {
-		utils.WriteResponse(w, http.StatusInternalServerError, "Error getting sum of progress")
-		return
-	}
-
-	if sum+user.Progress > 1 {
+	if err = app.DB.SumCheck(user.Progress); err != nil {
 		utils.WriteResponse(w, http.StatusBadRequest, "Error creating user: Progress sum cannot exceed 100")
 		return
 	}
 
-	if err = app.DB.CreateUser(user); err != nil {
+	if err = app.DB.CreateUser(*user); err != nil {
 		utils.WriteResponse(w, http.StatusInternalServerError, "Error creating user")
 		return
 	}

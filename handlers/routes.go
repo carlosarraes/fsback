@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 
 	"github.com/carlosarraes/fsback/db"
+	"github.com/carlosarraes/fsback/repository"
 	"github.com/carlosarraes/fsback/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -13,7 +13,7 @@ import (
 
 type App struct {
 	DSN string
-	DB  db.PostgresConn
+	DB  repository.DbRepo
 }
 
 func (a *App) Routes() http.Handler {
@@ -37,6 +37,5 @@ func (a *App) Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
-	log.Println("Connected to db!")
 	return connection, nil
 }
