@@ -75,4 +75,22 @@ You can use your favorite client, such as Insomnia or Postman, or you can use ou
 
 ## Tests
 
-No information at this time.
+Tests done on routes, connection to db(mock) and tested handlers with a mockedDb. Red lines are uncovered, would need a second mock db that return only errors to test it or a package like [GoMock](https://github.com/golang/mock)
+
+<table>
+<tr>
+<th>Routes</th>
+<th>Handlers</th>
+</tr>
+<tr>
+<th>
+
+  ![](missing2.png)
+</th>
+<th>
+
+![](missing.png)
+</th>
+</tr>
+</table>
+
