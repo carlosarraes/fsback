@@ -68,17 +68,10 @@ func (m *PostgresDBRepo) CreateUser(user User) error {
 }
 
 func (m *PostgresDBRepo) SumCheck(progress float64) error {
-	sumCheck, err := m.DB.Query("SELECT sum(progress) FROM data.user")
+	var sum float64
+	err := m.DB.QueryRow("SELECT sum(progress) FROM data.user").Scan(&sum)
 	if err != nil {
 		return err
-	}
-	defer sumCheck.Close()
-	var sum float64
-	if sumCheck.Next() {
-		err := sumCheck.Scan(&sum)
-		if err != nil {
-			return err
-		}
 	}
 
 	if sum+progress > 1.00 {
